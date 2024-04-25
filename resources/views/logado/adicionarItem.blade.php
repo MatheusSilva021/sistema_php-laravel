@@ -150,21 +150,15 @@
     <div class="container d-flex justify-content-center align-items-center min-vh-100 py-6">
         <div class="container-fluid conteudo">
             <div class="row w-100 d-flex justify-content-center my-3 mx-auto">
-                <a class="w-75 my-2 btn fs-4 d-flex justify-content-center align-items-center" data-bs-toggle="offcanvas"
-                    href="#lanche" role="button" aria-controls="lanche"
-                    style="background-color: #881E3B; color: white; height:80px;">
-                    Lanches
-                </a>
-                <a class="w-75 my-2 btn fs-4 d-flex justify-content-center align-items-center" data-bs-toggle="offcanvas"
-                    href="#bebida" role="button" aria-controls="bebida"
-                    style="background-color: #881E3B; color: white; height:80px;">
-                    Bebidas
-                </a>
-                <a class="w-75 my-2 btn fs-4 d-flex justify-content-center align-items-center" data-bs-toggle="offcanvas"
-                    href="#alc" role="button" aria-controls="alc"
-                    style="background-color: #881E3B; color: white; height:80px;">
-                    Bebidas Alcoólicas
-                </a>
+                @forelse ($codigos as $codigo)
+                    <a class="w-75 my-2 btn fs-4 d-flex justify-content-center align-items-center"
+                        data-bs-toggle="offcanvas" href="#{{ $codigo->nome }}" role="button"
+                        aria-controls="{{ $codigo->nome }}" style="background-color: #881E3B; color: white; height:80px;">
+                        {{ Str::ucfirst($codigo->nome) }}
+                    </a>
+                @empty
+                    <h1>Nenhum grupo de produtos cadastrado no momento.</h1>
+                @endforelse
             </div>
             <form action="/adicionarItem/{{ $comanda }}" method="post">
                 @csrf
@@ -179,129 +173,64 @@
         </div>
     </nav>
 
-
-
-    {{-- LANCHES --}}
-    <div class="offcanvas offcanvas-end" tabindex="-1" id="lanche" aria-labelledby="offcanvasExampleLabel">
-        <div class="offcanvas-header">
-            <h5 class="offcanvas-title" id="offcanvasExampleLabel">Lanches</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-        </div>
-        <div class="offcanvas-body" style="background-color: #e0e0e0;">
-            <div class="container-fluid offconteudo">
-                <div class="row">
-                    <div class="my-1">
-                        @forelse ($lanches as $lanche)
-                            <div class="my-3">
-                                <h2 class="fs-1">{{ $lanche->descricao }}</h2>
-                                <input type="hidden" name="cod_prod[]" value="{{ $lanche->cod_produto }}">
-                                <h2 class="fs-5">Valor:
-                                    {{ number_format($lanche->valor, 2, ',', '.') }}
-                                </h2>
-                                <label class="form-label fs-5">Quantidade: </label>
-                                <div class="mx-auto d-flex justify-content-center align-items-center">
-                                    <button id="decrement" onclick="stepper(this,{{ $lanche->cod_produto }})"
-                                        type="button"><span class="align-middle"><i class="minus"></i></span></button>
-                                    <input type="number" id="{{ $lanche->cod_produto }}" name="quantidade[]" value='0'
-                                        step='1' min='0' readonly>
-                                    <button id="increment" onclick="stepper(this,{{ $lanche->cod_produto }})"
-                                        type="button"><span class="align-middle"><i class="plus"></i></span></button>
-                                </div>
-                                <label id="lobservacao{{ $lanche->cod_produto }}" style="display: none;"
-                                    class="form-label fs-5">Observação:
-                                </label>
-                                <textarea id="observacao{{ $lanche->cod_produto }}" name="observacao[]" style="display: none;"
-                                    oninput='this.style.height = "";this.style.height = this.scrollHeight + 10 + "px"' class="form-control"></textarea>
-                            </div>
-                        @empty
-                            <h1>Não há lanches cadastrados</h1>
-                        @endforelse
+    @foreach ($codigos as $codigo)
+        @php
+            $chave = $codigo->nome;
+            $hasItems = false;
+        @endphp
+        <div class="offcanvas offcanvas-end" tabindex="-1" id="{{ $codigo->nome }}"
+            aria-labelledby="offcanvasExampleLabel">
+            <div class="offcanvas-header">
+                <h5 class="offcanvas-title" id="offcanvasExampleLabel">{{ Str::ucfirst($codigo->nome) }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            </div>
+            <div class="offcanvas-body" style="background-color: #e0e0e0;">
+                <div class="container-fluid offconteudo">
+                    <div class="row">
+                        <div class="my-1">
+                            @forelse ($produtos as $chave => $colecao)
+                                @foreach ($colecao as $item)
+                                    @if ($item->cod_grupo == $codigo->cod_grupo)
+                                        @php
+                                            $hasItems = true;
+                                        @endphp
+                                        <div class="my-3">
+                                            <h2 class="fs-1">{{ $item->descricao }}</h2>
+                                            <input type="hidden" name="cod_prod[]" value="{{ $item->cod_produto }}">
+                                            <h2 class="fs-5">Valor:
+                                                {{ number_format($item->valor, 2, ',', '.') }}
+                                            </h2>
+                                            <label class="form-label fs-5">Quantidade: </label>
+                                            <div class="mx-auto d-flex justify-content-center align-items-center">
+                                                <button id="decrement" onclick="stepper(this,{{ $item->cod_produto }})"
+                                                    type="button"><span class="align-middle"><i
+                                                            class="minus"></i></span></button>
+                                                <input type="number" id="{{ $item->cod_produto }}" name="quantidade[]"
+                                                    value='0' step='1' min='0' readonly>
+                                                <button id="increment" onclick="stepper(this,{{ $item->cod_produto }})"
+                                                    type="button"><span class="align-middle"><i
+                                                            class="plus"></i></span></button>
+                                            </div>
+                                            <label id="lobservacao{{ $item->cod_produto }}" style="display: none;"
+                                                class="form-label fs-5">Observação:
+                                            </label>
+                                            <textarea id="observacao{{ $item->cod_produto }}" name="observacao[]" style="display: none;"
+                                                oninput='this.style.height = "";this.style.height = this.scrollHeight + 10 + "px"' class="form-control"></textarea>
+                                        </div>
+                                    @endif
+                                @endforeach
+                            @empty
+                                <h1>Não há {{ $codigo->nome }} cadastrados</h1>
+                            @endforelse
+                            @if ($hasItems == false)
+                                <h1>Não há {{ Str::ucfirst($codigo->nome) }} cadastrados</h1>
+                            @endif
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-
-
-    {{-- BEBIDAS --}}
-
-    <div class="offcanvas offcanvas-end" tabindex="-1" id="bebida" aria-labelledby="offcanvasExampleLabel">
-        <div class="offcanvas-header">
-            <h5 class="offcanvas-title" id="offcanvasExampleLabel">Bebidas</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-        </div>
-        <div class="offcanvas-body" style="background-color: #e0e0e0;">
-            <div class="container-fluid offconteudo">
-                <div class="row">
-                    <div class="my-1">
-                        @forelse ($bebidas as $bebida)
-                            <div class="my-3">
-                                <h2>{{ $bebida->descricao }}</h2>
-                                <input type="hidden" name="cod_prod[]" value="{{ $bebida->cod_produto }}">
-                                <label class="form-label fs-5">Quantidade: </label>
-                                <div class="mx-auto d-flex justify-content-center align-items-center">
-                                    <button id="decrement" onclick="stepper(this,{{ $bebida->cod_produto }})"
-                                        type="button"><span class="align-middle"><i class="minus"></i></span></button>
-                                    <input type="number" id="{{ $bebida->cod_produto }}" name="quantidade[]"
-                                        value='0' step='1' min='0' readonly>
-                                    <button id="increment" onclick="stepper(this,{{ $bebida->cod_produto }})"
-                                        type="button"><span class="align-middle"><i class="plus"></i></span></button>
-                                </div>
-                                <label id="lobservacao{{ $bebida->cod_produto }}" style="display: none;"
-                                    class="form-label fs-5">Observação:
-                                </label>
-                                <textarea id="observacao{{ $bebida->cod_produto }}" name="observacao[]" style="display: none;" class="form-control"
-                                    oninput='this.style.height = "";this.style.height = this.scrollHeight + 10 + "px"'></textarea>
-                            </div>
-                        @empty
-                            <h1>Não há bebidas cadastradas</h1>
-                        @endforelse
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-
-
-    {{-- BEBIDAS ALCOOLICAS --}}
-
-    <div class="offcanvas offcanvas-end" tabindex="-1" id="alc" aria-labelledby="offcanvasExampleLabel">
-        <div class="offcanvas-header">
-            <h5 class="offcanvas-title" id="offcanvasExampleLabel">Bebidas Alcoólicas</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-        </div>
-        <div class="offcanvas-body" style="background-color: #e0e0e0;">
-            <div class="container-fluid offconteudo">
-                <div class="row">
-                    <div class="my-1">
-                        @forelse ($bebidas_alc as $alc)
-                            <div class="my-3">
-                                <h2>{{ $alc->descricao }}</h2>
-                                <input type="hidden" name="cod_prod[]" value="{{ $alc->cod_produto }}">
-                                <label class="form-label fs-5">Quantidade: </label>
-                                <div class="mx-auto d-flex justify-content-center align-items-center">
-                                    <button id="decrement" onclick="stepper(this,{{ $alc->cod_produto }})"
-                                        type="button"><span class="align-middle"><i class="minus"></i></span></button>
-                                    <input type="number" id="{{ $alc->cod_produto }}" name="quantidade[]"
-                                        value='0' step='1' min='0' readonly>
-                                    <button id="increment" onclick="stepper(this,{{ $alc->cod_produto }})"
-                                        type="button"><span class="align-middle"><i class="plus"></i></span></button>
-                                </div>
-                                <label id="lobservacao{{ $alc->cod_produto }}" style="display: none;"
-                                    class="form-label fs-5">Observação:
-                                </label>
-                                <textarea id="observacao{{ $alc->cod_produto }}" name="observacao[]" style="display: none;" class="form-control"
-                                    oninput='this.style.height = "";this.style.height = this.scrollHeight + 10 + "px"'></textarea>
-                            </div>
-                        @empty
-                            <h1>Não há Bebidas Alcoólicas cadastradas</h1>
-                        @endforelse
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    @endforeach
     </form>
 
     <script type="text/javascript">

@@ -61,22 +61,25 @@ class usuarioController extends Controller
     public function adicionarItemIndex($comanda)
     {
         try {
-            $lanches = DB::table('produtos')
-                ->select('cod_produto', 'descricao', 'cod_grupo', 'valor')
-                ->where('estoque', '>', '0')
-                ->where('cod_grupo', '=', '1')
+
+
+            $codigos = DB::table('grupos')
+                ->select('cod_grupo', 'nome')
                 ->get();
-            $bebidas = DB::table('produtos')
-                ->select('cod_produto', 'descricao', 'cod_grupo', 'valor')
-                ->where('estoque', '>', '0')
-                ->where('cod_grupo', '=', '2')
-                ->get();
-            $bebidas_alc = DB::table('produtos')
-                ->select('cod_produto', 'descricao', 'cod_grupo', 'valor')
-                ->where('estoque', '>', '0')
-                ->where('cod_grupo', '=', '3')
-                ->get();
-            return view('logado.adicionarItem', ['comanda' => $comanda, 'lanches' => $lanches, 'bebidas' => $bebidas, 'bebidas_alc' => $bebidas_alc]);
+
+            $produtos = [];
+
+            foreach ($codigos as $codigo) {
+                $produtosDaCategoria = DB::table('produtos')
+                    ->select('cod_produto', 'descricao', 'valor', 'cod_grupo')
+                    ->where('estoque', '>', 0)
+                    ->where('cod_grupo', $codigo->cod_grupo)
+                    ->get();
+
+                $produtos[$codigo->nome] = $produtosDaCategoria;
+            }
+
+            return view('logado.adicionarItem', ['comanda' => $comanda, 'codigos' => $codigos, 'produtos' => $produtos]);
         } catch (Exception $e) {
             return redirect('/comanda/' . $comanda)->with('msg.erro', 'Houve um erro, código do erro: ' . $e->getCode());
         }
